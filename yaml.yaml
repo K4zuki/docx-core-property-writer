@@ -1,17 +1,19 @@
 ---
-author: "K4ZUKI" # str
-category: "Category" # str
-comments: "Comment" # str
-content_status: "Status" # ignored?
-created: "2018-12-13" # datetime YYYY-MM-DD
-identifier: "ID" # ignored?
-keywords: "Keyword1 Keyword2"
-language: "Japanese" # ignored?
-last_modified_by: "K4ZUKI"
-last_printed: "2018-12-13" # datetime YYYY-MM-DD
-modified: "2018-12-13" # datetime YYYY-MM-DD
-revision: 1123 # int < 32768
-subject: "SubjecT" # str
-title: "Title" # str
-version: "Version" # ignored?
+docx_coreprop:
+  author: "K4ZUKI" # str
+  category: "Category" # str
+  comments: "Comment" # str
+  created: "2018-12-13" # datetime YYYY-MM-DD
+  keywords: "Keyword1 Keyword2" # str
+  last_modified_by: "K4ZUKI" # str
+  last_printed: "2018-12-13" # datetime YYYY-MM-DD
+  modified: "2018-12-13" # datetime YYYY-MM-DD
+  revision: 1123 # int < 32768
+  subject: "SubjecT" # str
+  title: "Title" # str
+
+  content_status: "Status" # ignored?
+  identifier: "ID" # ignored?
+  language: "Japanese" # ignored?
+  version: "Version" # ignored?
 ...

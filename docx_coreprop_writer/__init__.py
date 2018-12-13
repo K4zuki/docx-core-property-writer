@@ -9,6 +9,7 @@ from attrdict import AttrDict
 
 def overwrite(meta, doc):
     doc_ = docx.Document(doc)  # type:docx.Document
+    meta = meta.docx_coreprop
     if "author" in meta:
         """ author (unicode)
         Note: named ‘creator’ in spec.
