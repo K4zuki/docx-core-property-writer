@@ -16,4 +16,10 @@ docx_coreprop:
   identifier: "ID" # ignored?
   language: "Japanese" # ignored?
   version: "Version" # ignored?
+
+  table:
+    "Normal Table": "Centered"
+  paragraph:
+    "Normal": "Body Text"
+    "First Paragraph": "Body Text"
 ...

@@ -175,14 +175,20 @@ def replace_style(meta_file, filename, style_ext):
     """
 
     doc = docx.Document(filename)  # type:docx.Document
+    if meta_file is not None:
+        meta_file = meta_file.get("docx_coreprop")
+    else:
+        meta_file = {}
+    para = {**meta_file["paragraph"], **style_ext["paragraph"]}  # python 3.5+ style
+    table = {**meta_file["table"], **style_ext["table"]}  # python 3.5+ style
     for p in doc.paragraphs:
-        for key, val in style_ext["paragraph"].items():
+        for key, val in para.items():
             print("{} -> {}".format(key, val))
             # print(doc.styles[val])
             if p.style.name == key:
                 p.style = doc.styles[val]
     for t in doc.tables:
-        for key, val in style_ext["table"].items():
+        for key, val in table.items():
             print("{} -> {}".format(key, val))
             # print(doc.styles[val])
             if t.style.name == key:
