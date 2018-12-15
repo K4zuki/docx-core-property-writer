@@ -6,6 +6,7 @@ import yaml
 import docx
 from attrdict import AttrDict
 import pprint
+from .version import version
 
 attr = ["author",
         "category",
@@ -179,7 +180,16 @@ def replace_style(meta_file, filename, style_ext):
     # doc.save(filename)
 
 
-def main(args):
+def main():
+    parser = argparse.ArgumentParser(description="Reads yaml, overwrites DOCX core property")
+    parser.add_argument("--input", "-I", help="yaml input filename")
+    parser.add_argument("--output", "-O", help="docx output filename")
+    parser.add_argument("--metadata", "-M", default={}, action=store_dict)
+    parser.add_argument("--style", "-S", default={}, action=store_dict)
+    parser.add_argument('--version', action='version', version=str(version))
+
+    args = parser.parse_args()
+
     with open(args.input, "r") as file:
         meta_file = yaml.load(file.read())
     doc = args.output
@@ -191,11 +201,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Reads yaml, overwrites DOCX core property")
-    parser.add_argument("--input", "-I", help="yaml input filename", required=True)
-    parser.add_argument("--output", "-O", help="docx output filename", required=True)
-    parser.add_argument("--metadata", "-M", default={}, action=store_dict)
-    parser.add_argument("--style", "-S", default={}, action=store_dict)
-    args = parser.parse_args()
-
-    main(args)
+    main()
