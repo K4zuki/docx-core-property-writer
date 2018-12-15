@@ -5,8 +5,7 @@ import argparse
 import yaml
 import docx
 from attrdict import AttrDict
-import pprint
-from .version import version
+from docx_coreprop_writer.version import version
 
 attr = ["author",
         "category",
@@ -74,7 +73,7 @@ def overwrite_meta(meta_file, filename, meta_ext):
     doc = docx.Document(filename)  # type:docx.Document
 
     meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in attr})
-    pprint.pprint(meta)
+    [print("{} = {}".format(key, val)) for key, val in meta.items()]
     if meta.author is not None:
         """ author (unicode)
         Note: named ‘creator’ in spec.
@@ -176,8 +175,22 @@ def replace_style(meta_file, filename, style_ext):
     """
 
     doc = docx.Document(filename)  # type:docx.Document
+    for p in doc.paragraphs:
+        for key, val in style_ext["paragraph"].items():
+            print("{} -> {}".format(key, val))
+            # print(doc.styles[val])
+            if p.style.name == key:
+                p.style = doc.styles[val]
+    for t in doc.tables:
+        for key, val in style_ext["table"].items():
+            print("{} -> {}".format(key, val))
+            # print(doc.styles[val])
+            if t.style.name == key:
+                t.style = doc.styles[val]
+                # print(t.style)
+
     # print(doc.styles)
-    # doc.save(filename)
+    doc.save(filename)
 
 
 def main():
@@ -185,7 +198,8 @@ def main():
     parser.add_argument("--input", "-I", help="yaml input filename")
     parser.add_argument("--output", "-O", help="docx output filename")
     parser.add_argument("--metadata", "-M", default={}, action=store_dict)
-    parser.add_argument("--style", "-S", default={}, action=store_dict)
+    parser.add_argument("--paragraph", "-P", default={}, action=store_dict)
+    parser.add_argument("--table", "-T", default={}, action=store_dict)
     parser.add_argument('--version', action='version', version=str(version))
 
     args = parser.parse_args()
@@ -194,10 +208,10 @@ def main():
         meta_file = yaml.load(file.read())
     doc = args.output
     meta_ext = args.metadata
-    # style_ext = args.style
+    style_ext = {"paragraph": args.paragraph, "table": args.table, }
 
     overwrite_meta(meta_file, doc, meta_ext)
-    # replace_style(meta_file, doc, style_ext)
+    replace_style(meta_file, doc, style_ext)
 
 
 if __name__ == "__main__":
