@@ -177,10 +177,8 @@ def replace_style(meta_file, filename, style_ext):
     doc = docx.Document(filename)  # type:docx.Document
     if meta_file is not None:
         meta_file = meta_file.get("docx_coreprop")
-    else:
-        meta_file = {}
-    para = {**meta_file["paragraph"], **style_ext["paragraph"]}  # python 3.5+ style
-    table = {**meta_file["table"], **style_ext["table"]}  # python 3.5+ style
+    para = get_choice(style_ext, meta_file, "paragraph")
+    table = get_choice(style_ext, meta_file, "table")
     for p in doc.paragraphs:
         for key, val in para.items():
             print("{} -> {}".format(key, val))
