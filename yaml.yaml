@@ -3,11 +3,11 @@ docx_coreprop:
   author: "K4ZUKI" # str
   category: "Category" # str
   comments: "Comment" # str
-  created: "2018-12-13" # datetime YYYY-MM-DD
+  created: "31-Dec-2018" # datetime DD-MMM-YYYY set externally
   keywords: "Keyword1 Keyword2" # str
   last_modified_by: "K4ZUKI" # str
-  last_printed: "2018-12-13" # datetime YYYY-MM-DD
-  modified: "2018-12-13" # datetime YYYY-MM-DD
+  last_printed: "31-Dec-2018" # datetime DD-MMM-YYYY
+  modified: "31-Dec-2018" # datetime DD-MMM-YYYY
   revision: 1123 # int < 32768
   subject: "SubjecT" # str
   title: "Title" # str

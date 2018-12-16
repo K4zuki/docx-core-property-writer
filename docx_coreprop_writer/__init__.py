@@ -105,7 +105,7 @@ def overwrite_meta(meta_file, filename, meta_ext):
         """created (datetime)
         Date of creation of the resource. (Dublin Core)
         """
-        doc.core_properties.created = datetime.datetime.strptime(meta.created, "+%b-%d-%Y")  # MMM-DD-YYYY
+        doc.core_properties.created = datetime.datetime.strptime(meta.created, "%d-%b-%Y")  # DD-MMM-YYYY
     if meta.identifier is not None:
         """identifier (unicode)
         An unambiguous reference to the resource within a given context. (Dublin Core)
@@ -134,12 +134,12 @@ def overwrite_meta(meta_file, filename, meta_ext):
         """last_printed (datetime)
         The date and time of the last printing. (Open Packaging Conventions)
         """
-        doc.core_properties.last_printed = datetime.datetime.strptime(meta.last_printed, "+%b-%d-%Y")
+        doc.core_properties.last_printed = datetime.datetime.strptime(meta.last_printed, "%d-%b-%Y")
     if meta.modified is not None:
         """modified (datetime)
         Date on which the resource was changed. (Dublin Core)
         """
-        doc.core_properties.modified = datetime.datetime.strptime(meta.modified, "+%b-%d-%Y")
+        doc.core_properties.modified = datetime.datetime.strptime(meta.modified, "%d-%b-%Y")
     if meta.revision is not None:
         """revision (int)
         The revision number. This value might indicate the number of saves or revisions,
