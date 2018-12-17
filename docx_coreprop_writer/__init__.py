@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from __future__ import print_function
 import datetime
 import sys
 import argparse
@@ -54,10 +55,12 @@ def get_choice(meta_ext, meta_file, key):
     :return ret:
     """
 
-    if meta_file is not None:
-        ret = meta_ext.get(key, meta_file.get(key, None))
-    else:
+    if meta_ext is not None:
         ret = meta_ext.get(key, None)
+        if ret is None:
+            ret = meta_file.get(key)
+    else:
+        ret = meta_file.get(key, None)
     return ret
 
 
@@ -74,10 +77,10 @@ def overwrite_meta(meta_file, filename, meta_ext):
     doc = docx.Document(filename)  # type:docx.Document
 
     meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in attr})
-    [print("{} = {}".format(key, val)) for key, val in meta.items()]
+    [print("{} = {}".format(key, val), file=sys.stderr) for key, val in meta.items()]
     if meta.author is not None:
         """ author (unicode)
-        Note: named ‘creator’ in spec.
+        Note: named `creator` in spec.
         An entity primarily responsible for making the content of the resource. (Dublin Core)
         """
         doc.core_properties.author = meta.author
@@ -90,7 +93,7 @@ def overwrite_meta(meta_file, filename, meta_ext):
         doc.core_properties.category = meta.category
     if meta.comments is not None:
         """comments (unicode)
-        Note: named ‘description’ in spec.
+        Note: named `description` in spec.
         An explanation of the content of the resource.
         Values might include an abstract, table of contents, reference to a graphical representation
         of content, and a free-text account of the content. (Dublin Core)
@@ -99,7 +102,7 @@ def overwrite_meta(meta_file, filename, meta_ext):
     if meta.content_status is not None:
         """content_status (unicode)
         The status of the content.
-        Values might include “Draft”, “Reviewed”, and “Final”. (Open Packaging Conventions)
+        Values might include "Draft", "Reviewed", and "Final". (Open Packaging Conventions)
         """
         doc.core_properties.content_status = meta.content_status
     if meta.created is not None:
@@ -180,19 +183,19 @@ def replace_style(meta_file, filename, style_ext):
         meta_file = meta_file.get("docx_coreprop")
     para = get_choice(style_ext, meta_file, "paragraph")
     table = get_choice(style_ext, meta_file, "table")
-    for p in doc.paragraphs:
+    if para is not None:
         for key, val in para.items():
-            print("{} -> {}".format(key, val), file=sys.stderr)
-            print(doc.styles[val], file=sys.stderr)
-            if p.style.name == key:
-                p.style = doc.styles[val]
-    for t in doc.tables:
+            for p in doc.paragraphs:
+                if p.style.name == key:
+                    print("{} -> {}".format(key, val), file=sys.stderr)
+                    p.style = doc.styles[val]
+    if table is not None:
         for key, val in table.items():
-            print("{} -> {}".format(key, val), file=sys.stderr)
-            print(doc.styles[val], file=sys.stderr)
-            if t.style.name == key:
-                t.style = doc.styles[val]
-                # print(t.style)
+            for t in doc.tables:
+                if t.style.name == key:
+                    print("{} -> {}".format(key, val), file=sys.stderr)
+                    t.style = doc.styles[val]
+                    # print(t.style)
 
     # print(doc.styles)
     doc.save(filename)
@@ -203,8 +206,8 @@ def main():
     parser.add_argument("--input", "-I", help="yaml input filename")
     parser.add_argument("--output", "-O", help="docx output filename")
     parser.add_argument("--metadata", "-M", default={}, action=store_dict)
-    parser.add_argument("--paragraph", "-P", default={}, action=store_dict)
-    parser.add_argument("--table", "-T", default={}, action=store_dict)
+    parser.add_argument("--paragraph", "-P", default=None, action=store_dict)
+    parser.add_argument("--table", "-T", default=None, action=store_dict)
     parser.add_argument('--version', action='version', version=str(version))
 
     args = parser.parse_args()
