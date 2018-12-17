@@ -181,14 +181,14 @@ def replace_style(meta_file, filename, style_ext):
     table = get_choice(style_ext, meta_file, "table")
     for p in doc.paragraphs:
         for key, val in para.items():
-            print("{} -> {}".format(key, val))
-            # print(doc.styles[val])
+            print("{} -> {}".format(key, val), file=sys.stderr)
+            print(doc.styles[val], file=sys.stderr)
             if p.style.name == key:
                 p.style = doc.styles[val]
     for t in doc.tables:
         for key, val in table.items():
-            print("{} -> {}".format(key, val))
-            # print(doc.styles[val])
+            print("{} -> {}".format(key, val), file=sys.stderr)
+            print(doc.styles[val], file=sys.stderr)
             if t.style.name == key:
                 t.style = doc.styles[val]
                 # print(t.style)
