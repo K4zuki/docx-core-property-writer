@@ -220,6 +220,7 @@ def main():
 
     overwrite_meta(meta_file, doc, meta_ext)
     replace_style(meta_file, doc, style_ext)
+    print("{} processed".format(doc), file=sys.stderr)
 
 
 if __name__ == "__main__":
