@@ -213,7 +213,7 @@ def main():
     args = parser.parse_args()
 
     with open(args.input, "r") as file:
-        meta_file = yaml.load(file.read())
+        meta_file = yaml.load(file.read(), Loader=yaml.SafeLoader)
     doc = args.output
     meta_ext = args.metadata
     style_ext = {"paragraph": args.paragraph, "table": args.table, }
