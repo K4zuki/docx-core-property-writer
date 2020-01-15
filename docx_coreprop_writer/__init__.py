@@ -203,7 +203,7 @@ def replace_style(meta_file, filename, style_ext):
     if table is not None:
         for key, val in table.items():
             for t in doc.tables:
-                print(t.autofit, file=sys.stderr)
+                # print(t.autofit, file=sys.stderr)
                 if key == "table-alignment":
                     val = val.lower()
                     t.alignment = TABLE_ALIGNMENT[val]
