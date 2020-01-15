@@ -181,6 +181,23 @@ def overwrite_meta(meta_file, filename, meta_ext):
     doc.save(filename)
 
 
+def apply_table_alignment(doc, table_alignment):
+    print(table_alignment, file=sys.stderr)
+    if table_alignment is not None:
+        table_alignment = table_alignment.lower()
+        for t in doc.tables:
+            t.alignment = TABLE_ALIGNMENT[table_alignment]
+
+
+def apply_vertical_alignment(doc, cell_vertical_alignment):
+    print(cell_vertical_alignment, file=sys.stderr)
+    if cell_vertical_alignment is not None:
+        cell_vertical_alignment = cell_vertical_alignment.lower()
+        for t in doc.tables:
+            for c in t._cells:
+                c.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
+
+
 def replace_style(meta_file, filename, style_ext):
     """
     :param dict meta_file:
@@ -201,17 +218,17 @@ def replace_style(meta_file, filename, style_ext):
                     print("{} -> {}".format(key, val), file=sys.stderr)
                     p.style = doc.styles[val]
     if table is not None:
+        table_alignment = table.get("table-alignment")
+        cell_vertical_alignment = table.get("vertical-alignment")
+
+        apply_table_alignment(doc, table_alignment)
+        apply_vertical_alignment(doc, cell_vertical_alignment)
+
         for key, val in table.items():
+            if key in ["table-alignment", "vertical-alignment"]:
+                continue
             for t in doc.tables:
-                # print(t.autofit, file=sys.stderr)
-                if key == "table-alignment":
-                    val = val.lower()
-                    t.alignment = TABLE_ALIGNMENT[val]
-                elif key == "vertical-alignment":
-                    val = val.lower()
-                    for c in t._cells:
-                        c.vertical_alignment = CELL_VERTICAL_ALIGMENT[val]
-                elif t.style.name == key:
+                if t.style.name == key:
                     print("{} -> {}".format(key, val), file=sys.stderr)
                     t.style = doc.styles[val]
                     # print(t.style)
