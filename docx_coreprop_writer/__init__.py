@@ -6,25 +6,36 @@ import sys
 import argparse
 import yaml
 import docx
+from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
 from attrdict import AttrDict
 from docx_coreprop_writer.version import version
 
-attr = ["author",
-        "category",
-        "comments",
-        "content_status",
-        "created",
-        "identifier",
-        "keywords",
-        "language",
-        "last_modified_by",
-        "last_printed",
-        "modified",
-        "revision",
-        "subject",
-        "title",
-        "version",
-        ]
+ATTR_LIST = ["author",
+             "category",
+             "comments",
+             "content_status",
+             "created",
+             "identifier",
+             "keywords",
+             "language",
+             "last_modified_by",
+             "last_printed",
+             "modified",
+             "revision",
+             "subject",
+             "title",
+             "version",
+             ]
+
+TABLE_ALIGNMENT = {"left": WD_TABLE_ALIGNMENT.LEFT,
+                   "center": WD_TABLE_ALIGNMENT.CENTER,
+                   "right": WD_TABLE_ALIGNMENT.RIGHT}
+
+CELL_VERTICAL_ALIGMENT = {"top": WD_ALIGN_VERTICAL.TOP,
+                          "center": WD_ALIGN_VERTICAL.CENTER,
+                          "bottom": WD_ALIGN_VERTICAL.BOTTOM,
+                          "both": WD_ALIGN_VERTICAL.BOTH
+                          }
 
 
 def ensure_value(namespace, dest, default):
@@ -76,7 +87,7 @@ def overwrite_meta(meta_file, filename, meta_ext):
         meta_file = meta_file.get("docx_coreprop")
     doc = docx.Document(filename)  # type:docx.Document
 
-    meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in attr})
+    meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in ATTR_LIST})
     [print("{} = {}".format(key, val), file=sys.stderr) for key, val in meta.items()]
     if meta.author is not None:
         """ author (unicode)
@@ -192,7 +203,15 @@ def replace_style(meta_file, filename, style_ext):
     if table is not None:
         for key, val in table.items():
             for t in doc.tables:
-                if t.style.name == key:
+                print(t.autofit, file=sys.stderr)
+                if key == "table-alignment":
+                    val = val.lower()
+                    t.alignment = TABLE_ALIGNMENT[val]
+                elif key == "vertical-alignment":
+                    val = val.lower()
+                    for c in t._cells:
+                        c.vertical_alignment = CELL_VERTICAL_ALIGMENT[val]
+                elif t.style.name == key:
                     print("{} -> {}".format(key, val), file=sys.stderr)
                     t.style = doc.styles[val]
                     # print(t.style)
