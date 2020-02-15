@@ -6,8 +6,11 @@ import sys
 import argparse
 import yaml
 import docx
-from docx.enum.table import WD_ALIGN_VERTICAL, WD_TABLE_ALIGNMENT
+from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
+from docx.oxml import OxmlElement
+from docx.oxml.ns import qn
 from attrdict import AttrDict
+
 from docx_coreprop_writer.version import version
 
 ATTR_LIST = ["author",
@@ -31,10 +34,10 @@ TABLE_ALIGNMENT = {"left": WD_TABLE_ALIGNMENT.LEFT,
                    "center": WD_TABLE_ALIGNMENT.CENTER,
                    "right": WD_TABLE_ALIGNMENT.RIGHT}
 
-CELL_VERTICAL_ALIGMENT = {"top": WD_ALIGN_VERTICAL.TOP,
-                          "center": WD_ALIGN_VERTICAL.CENTER,
-                          "bottom": WD_ALIGN_VERTICAL.BOTTOM,
-                          "both": WD_ALIGN_VERTICAL.BOTH
+CELL_VERTICAL_ALIGMENT = {"top": WD_CELL_VERTICAL_ALIGNMENT.TOP,
+                          "center": WD_CELL_VERTICAL_ALIGNMENT.CENTER,
+                          "bottom": WD_CELL_VERTICAL_ALIGNMENT.BOTTOM,
+                          "both": WD_CELL_VERTICAL_ALIGNMENT.BOTH
                           }
 
 
@@ -75,7 +78,7 @@ def get_choice(meta_ext, meta_file, key):
     return ret
 
 
-def overwrite_meta(meta_file, filename, meta_ext):
+def apply_core_properties(meta_file, filename, meta_ext):
     """ Overwrite DOCX core property from meta_file or meta_ext dictionaries
     When both dict has value for each for same key, meta_ext has priority
 
@@ -189,7 +192,7 @@ def apply_table_alignment(doc, table_alignment):
             t.alignment = TABLE_ALIGNMENT[table_alignment]
 
 
-def apply_vertical_alignment(doc, cell_vertical_alignment):
+def apply_cell_vertical_alignment(doc, cell_vertical_alignment):
     print(cell_vertical_alignment, file=sys.stderr)
     if cell_vertical_alignment is not None:
         cell_vertical_alignment = cell_vertical_alignment.lower()
@@ -198,7 +201,31 @@ def apply_vertical_alignment(doc, cell_vertical_alignment):
                 c.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
 
 
-def replace_style(meta_file, filename, style_ext):
+def recommend_readonly(meta_file, filename, style_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict style_ext:
+    :return:
+    """
+
+    if meta_file is not None:
+        meta_file = meta_file.get("docx_coreprop")
+    read_only = get_choice(style_ext, meta_file, "read-only-recommended")
+
+    if read_only is not None:
+        print("Set read only recommend flag", file=sys.stderr)
+        doc = docx.Document(filename)  # type:docx.Document
+        write_protection = OxmlElement("w:writeProtection")
+        write_protection.set(qn("w:recommended"), "1")
+        write_protection.get(qn("w:recommended"), None)
+
+        doc.settings.element.append(write_protection)
+
+        doc.save(filename)
+
+
+def replace_styles(meta_file, filename, style_ext):
     """
     :param dict meta_file:
     :param str filename:
@@ -222,7 +249,7 @@ def replace_style(meta_file, filename, style_ext):
         cell_vertical_alignment = table.get("vertical-alignment")
 
         apply_table_alignment(doc, table_alignment)
-        apply_vertical_alignment(doc, cell_vertical_alignment)
+        apply_cell_vertical_alignment(doc, cell_vertical_alignment)
 
         for key, val in table.items():
             if key in ["table-alignment", "vertical-alignment"]:
@@ -254,8 +281,10 @@ def main():
     meta_ext = args.metadata
     style_ext = {"paragraph": args.paragraph, "table": args.table, }
 
-    overwrite_meta(meta_file, doc, meta_ext)
-    replace_style(meta_file, doc, style_ext)
+    apply_core_properties(meta_file, doc, meta_ext)
+    replace_styles(meta_file, doc, style_ext)
+    recommend_readonly(meta_file, doc, meta_ext)
+
     print("{} processed".format(doc), file=sys.stderr)
 
 
