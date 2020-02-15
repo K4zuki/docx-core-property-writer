@@ -213,7 +213,7 @@ def recommend_readonly(meta_file, filename, style_ext):
         meta_file = meta_file.get("docx_coreprop")
     read_only = get_choice(style_ext, meta_file, "read-only-recommended")
 
-    if read_only is not None:
+    if read_only is True:
         print("Set read only recommend flag", file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
         write_protection = OxmlElement("w:writeProtection")
