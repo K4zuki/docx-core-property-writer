@@ -13,6 +13,7 @@ from attrdict import AttrDict
 
 from docx_coreprop_writer.version import version
 
+META_KEY = "docx_coreprop"
 ATTR_LIST = ["author",
              "category",
              "comments",
@@ -30,9 +31,9 @@ ATTR_LIST = ["author",
              "version",
              ]
 
-TABLE_ALIGNMENT = {"left": WD_TABLE_ALIGNMENT.LEFT,
-                   "center": WD_TABLE_ALIGNMENT.CENTER,
-                   "right": WD_TABLE_ALIGNMENT.RIGHT}
+TABLE_ALIGNMENT_IN_PAGE = {"left": WD_TABLE_ALIGNMENT.LEFT,
+                           "center": WD_TABLE_ALIGNMENT.CENTER,
+                           "right": WD_TABLE_ALIGNMENT.RIGHT}
 
 CELL_VERTICAL_ALIGMENT = {"top": WD_CELL_VERTICAL_ALIGNMENT.TOP,
                           "center": WD_CELL_VERTICAL_ALIGNMENT.CENTER,
@@ -68,7 +69,7 @@ def get_choice(meta_ext, meta_file, key):
     :param str key:
     :return ret:
     """
-
+    assert meta_file is not None
     if meta_ext is not None:
         ret = meta_ext.get(key, None)
         if ret is None:
@@ -86,8 +87,7 @@ def apply_core_properties(meta_file, filename, meta_ext):
     :param str filename:
     :param dict meta_ext:
     """
-    if meta_file is not None:
-        meta_file = meta_file.get("docx_coreprop")
+
     doc = docx.Document(filename)  # type:docx.Document
 
     meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in ATTR_LIST})
@@ -184,105 +184,170 @@ def apply_core_properties(meta_file, filename, meta_ext):
     doc.save(filename)
 
 
-def apply_table_alignment(doc, table_alignment):
-    print(table_alignment, file=sys.stderr)
-    if table_alignment is not None:
-        table_alignment = table_alignment.lower()
-        for t in doc.tables:
-            t.alignment = TABLE_ALIGNMENT[table_alignment]
-
-
-def apply_cell_vertical_alignment(doc, cell_vertical_alignment):
-    print(cell_vertical_alignment, file=sys.stderr)
-    if cell_vertical_alignment is not None:
-        cell_vertical_alignment = cell_vertical_alignment.lower()
-        for t in doc.tables:
-            for c in t._cells:
-                c.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
-
-
-def recommend_readonly(meta_file, filename, style_ext):
+def apply_table_alignment_in_page(meta_file, filename, meta_ext):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict style_ext:
+    :param dict meta_ext:
     :return:
     """
+    _message = "Each table has aligned at {} of page"
+    _key = "table-alignment-in-page"
 
-    if meta_file is not None:
-        meta_file = meta_file.get("docx_coreprop")
-    read_only = get_choice(style_ext, meta_file, "read-only-recommended")
+    table_alignment_in_page = get_choice(meta_ext, meta_file, _key)
+
+    if table_alignment_in_page is not None:
+        doc = docx.Document(filename)  # type:docx.Document
+        table_alignment_in_page = table_alignment_in_page.lower()
+        print(_message.format(table_alignment_in_page), file=sys.stderr)
+        for table in doc.tables:
+            table.alignment = TABLE_ALIGNMENT_IN_PAGE[table_alignment_in_page]
+        doc.save(filename)
+
+
+def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Each table cell has vertically {} aligned"
+    _key = "table-cell-vertical-alignment"
+
+    cell_vertical_alignment = get_choice(meta_ext, meta_file, _key)
+
+    if cell_vertical_alignment is not None:
+        doc = docx.Document(filename)  # type:docx.Document
+        cell_vertical_alignment = cell_vertical_alignment.lower()
+        print(_message.format(cell_vertical_alignment), file=sys.stderr)
+        for t in doc.tables:
+            for c in t._cells:
+                c.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
+        doc.save(filename)
+
+
+def recommend_readonly(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Set read only recommend flag"
+    _key = "read-only-recommended"
+
+    read_only = get_choice(meta_ext, meta_file, _key)
 
     if read_only is True:
-        print("Set read only recommend flag", file=sys.stderr)
+        print(_message, file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
+
         write_protection = OxmlElement("w:writeProtection")
         write_protection.set(qn("w:recommended"), "1")
         write_protection.get(qn("w:recommended"), None)
-
         doc.settings.element.append(write_protection)
 
         doc.save(filename)
 
 
-def replace_styles(meta_file, filename, style_ext):
+def replace_table_style(meta_file, filename, meta_ext):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict style_ext:
+    :param dict meta_ext:
     :return:
     """
+    _message = "Replace table styles"
+    _key = "table"
 
-    doc = docx.Document(filename)  # type:docx.Document
-    if meta_file is not None:
-        meta_file = meta_file.get("docx_coreprop")
-    para = get_choice(style_ext, meta_file, "paragraph")
-    table = get_choice(style_ext, meta_file, "table")
-    if para is not None:
-        for key, val in para.items():
-            for p in doc.paragraphs:
-                if p.style.name == key:
-                    print("{} -> {}".format(key, val), file=sys.stderr)
-                    p.style = doc.styles[val]
+    table = get_choice(meta_ext, meta_file, _key)
+
     if table is not None:
-        table_alignment = table.get("table-alignment")
-        cell_vertical_alignment = table.get("vertical-alignment")
+        print(_message, file=sys.stderr)
 
-        apply_table_alignment(doc, table_alignment)
-        apply_cell_vertical_alignment(doc, cell_vertical_alignment)
-
+        doc = docx.Document(filename)  # type:docx.Document
         for key, val in table.items():
-            if key in ["table-alignment", "vertical-alignment"]:
-                continue
-            for t in doc.tables:
-                if t.style.name == key:
+            for table in doc.tables:
+                if table.style.name == key:
                     print("{} -> {}".format(key, val), file=sys.stderr)
-                    t.style = doc.styles[val]
-                    # print(t.style)
+                    table.style = doc.styles[val]
+        doc.save(filename)
 
-    # print(doc.styles)
-    doc.save(filename)
+
+def replace_paragraph_style(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Replace paragraph styles"
+    _key = "paragraph"
+
+    para = get_choice(meta_ext, meta_file, _key)
+
+    if para is not None:
+        print(_message, file=sys.stderr)
+
+        doc = docx.Document(filename)  # type:docx.Document
+        for key, val in para.items():
+            for para in doc.paragraphs:
+                if para.style.name == key:
+                    print("{} -> {}".format(key, val), file=sys.stderr)
+                    para.style = doc.styles[val]
+
+        doc.save(filename)
+
+
+def replace_character_style(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Replace character styles"
+    _key = "character"
+
+    char = get_choice(meta_ext, meta_file, _key)
+
+    if char is not None:
+        print(_message, file=sys.stderr)
+        doc = docx.Document(filename)  # type:docx.Document
+        for key, val in char.items():
+            for para in doc.paragraphs:
+                for run in para.runs:
+                    if run.style.name == key:
+                        print("{} -> {}".format(key, val), file=sys.stderr)
+                        run.style = doc.styles[val]
+
+        doc.save(filename)
 
 
 def main():
     parser = argparse.ArgumentParser(description="Reads yaml, overwrites DOCX core property")
-    parser.add_argument("--input", "-I", help="yaml input filename")
-    parser.add_argument("--output", "-O", help="docx output filename")
+    parser.add_argument("--input", "-I", required=True, default=None, help="yaml input filename")
+    parser.add_argument("--output", "-O", required=True, help="docx output filename")
     parser.add_argument("--metadata", "-M", default={}, action=store_dict)
-    parser.add_argument("--paragraph", "-P", default=None, action=store_dict)
-    parser.add_argument("--table", "-T", default=None, action=store_dict)
+    # parser.add_argument("--paragraph", "-P", default=None, action=store_dict)
+    # parser.add_argument("--table", "-T", default=None, action=store_dict)
     parser.add_argument('--version', action='version', version=str(version))
 
     args = parser.parse_args()
 
     with open(args.input, "r") as file:
-        meta_file = yaml.load(file.read(), Loader=yaml.SafeLoader)
+        meta_file = yaml.load(file.read(), Loader=yaml.SafeLoader).get(META_KEY, {})
     doc = args.output
     meta_ext = args.metadata
-    style_ext = {"paragraph": args.paragraph, "table": args.table, }
+    # style_ext = {"paragraph": args.paragraph, "table": args.table, }
 
     apply_core_properties(meta_file, doc, meta_ext)
-    replace_styles(meta_file, doc, style_ext)
+    replace_paragraph_style(meta_file, doc, meta_ext)
+    replace_table_style(meta_file, doc, meta_ext)
+    replace_character_style(meta_file, doc, meta_ext)
+    apply_table_alignment_in_page(meta_file, doc, meta_ext)
+    apply_cell_vertical_alignment(meta_file, doc, meta_ext)
     recommend_readonly(meta_file, doc, meta_ext)
 
     print("{} processed".format(doc), file=sys.stderr)
