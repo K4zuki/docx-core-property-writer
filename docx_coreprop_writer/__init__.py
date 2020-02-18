@@ -221,9 +221,29 @@ def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
         doc = docx.Document(filename)  # type:docx.Document
         cell_vertical_alignment = cell_vertical_alignment.lower()
         print(_message.format(cell_vertical_alignment), file=sys.stderr)
-        for t in doc.tables:
-            for c in t._cells:
-                c.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
+        for table in doc.tables:
+            for cell in table._cells:
+                cell.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
+        doc.save(filename)
+
+
+def disable_table_autofit(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Fix table column widths"
+    _key = "disable-table-autofit"
+
+    disable_table_autofit = get_choice(meta_ext, meta_file, _key)
+
+    if disable_table_autofit is True:
+        doc = docx.Document(filename)  # type:docx.Document
+        print(_message, file=sys.stderr)
+        for table in doc.tables:
+            table.autofit = False
         doc.save(filename)
 
 
@@ -348,6 +368,7 @@ def main():
     replace_character_style(meta_file, doc, meta_ext)
     apply_table_alignment_in_page(meta_file, doc, meta_ext)
     apply_cell_vertical_alignment(meta_file, doc, meta_ext)
+    disable_table_autofit(meta_file, doc, meta_ext)
     recommend_readonly(meta_file, doc, meta_ext)
 
     print("{} processed".format(doc), file=sys.stderr)
