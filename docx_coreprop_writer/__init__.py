@@ -227,6 +227,66 @@ def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
+def unset_word2010_compatibility_mode(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Drop Word 2010 compatibility mode"
+    _key = "word2010compatible"
+    subelements = [
+        ("w:useFELayout", {}),
+        ("w:compatSetting", {"w:name": "compatibilityMode",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "15"
+                             },
+         ),
+        ("w:compatSetting", {"w:name": "overrideTableStyleFontSizeAndJustification",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "1",
+                             },
+         ),
+        ("w:compatSetting", {"w:name": "enableOpenTypeFeatures",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "1"
+                             },
+         ),
+        ("w:compatSetting", {"w:name": "doNotFlipMirrorIndents",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "1",
+                             },
+         ),
+        ("w:compatSetting", {"w:name": "differentiateMultirowTableHeaders",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "1",
+                             },
+         ),
+        ("w:compatSetting", {"w:name": "useWord2013TrackBottomHyphenation",
+                             "w:url": "http://schemas.microsoft.com/office/word",
+                             "w:val": "0",
+                             },
+         ),
+    ]
+
+    word2010compatible = get_choice(meta_ext, meta_file, _key)
+
+    if word2010compatible is False:
+        print(_message, file=sys.stderr)
+        doc = docx.Document(filename)  # type:docx.Document
+        doc.settings.element.remove_all("w:compat")
+
+        compat = OxmlElement("w:compat")
+        for sub_elem in subelements:
+            subelement = OxmlElement(sub_elem[0])
+            for attr, val in sub_elem[1].items():
+                subelement.set(qn(attr), val)
+            compat.append(subelement)
+        doc.settings.element.append(compat)
+        doc.save(filename)
+
+
 def disable_table_autofit(meta_file, filename, meta_ext):
     """
     :param dict meta_file:
@@ -262,11 +322,15 @@ def recommend_readonly(meta_file, filename, meta_ext):
     if read_only is True:
         print(_message, file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
-
-        write_protection = OxmlElement("w:writeProtection")
-        write_protection.set(qn("w:recommended"), "1")
-        write_protection.get(qn("w:recommended"), None)
-        doc.settings.element.append(write_protection)
+        write_protection = doc.settings.element.xpath("w:writeProtection")
+        if write_protection == []:
+            write_protection = OxmlElement("w:writeProtection")
+            write_protection.set(qn("w:recommended"), "1")
+            doc.settings.element.append(write_protection)
+        else:
+            write_protection = write_protection[0]
+            if write_protection.get(qn("w:recommended"), None) is None:
+                write_protection.set(qn("w:recommended"), "1")
 
         doc.save(filename)
 
@@ -362,6 +426,7 @@ def main():
     meta_ext = args.metadata
     # style_ext = {"paragraph": args.paragraph, "table": args.table, }
 
+    unset_word2010_compatibility_mode(meta_file, doc, meta_ext)
     apply_core_properties(meta_file, doc, meta_ext)
     replace_paragraph_style(meta_file, doc, meta_ext)
     replace_table_style(meta_file, doc, meta_ext)
