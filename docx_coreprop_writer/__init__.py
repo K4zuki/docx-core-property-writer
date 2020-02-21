@@ -51,7 +51,7 @@ def ensure_value(namespace, dest, default):
     return stored
 
 
-class store_dict(argparse.Action):
+class StoreDict(argparse.Action):
     """ Thanks to https://stackoverflow.com/a/29335524/6592473 """
 
     def __call__(self, parser, namespace, values, option_string=None):
@@ -413,9 +413,9 @@ def main():
     parser = argparse.ArgumentParser(description="Reads yaml, overwrites DOCX core property")
     parser.add_argument("--input", "-I", required=True, default=None, help="yaml input filename")
     parser.add_argument("--output", "-O", required=True, help="docx output filename")
-    parser.add_argument("--metadata", "-M", default={}, action=store_dict)
-    # parser.add_argument("--paragraph", "-P", default=None, action=store_dict)
-    # parser.add_argument("--table", "-T", default=None, action=store_dict)
+    parser.add_argument("--metadata", "-M", default={}, action=StoreDict)
+    # parser.add_argument("--paragraph", "-P", default=None, action=StoreDict)
+    # parser.add_argument("--table", "-T", default=None, action=StoreDict)
     parser.add_argument('--version', action='version', version=str(version))
 
     args = parser.parse_args()
