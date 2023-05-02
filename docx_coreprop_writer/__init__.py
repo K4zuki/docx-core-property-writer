@@ -9,7 +9,6 @@ import docx
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
-from attrdict import AttrDict
 
 from docx_coreprop_writer.version import version
 
@@ -79,6 +78,12 @@ def get_choice(meta_ext, meta_file, key):
     return ret
 
 
+class DictDotNotation(dict):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.__dict__ = self
+
+
 def apply_core_properties(meta_file, filename, meta_ext):
     """ Overwrite DOCX core property from meta_file or meta_ext dictionaries
     When both dict has value for each for same key, meta_ext has priority
@@ -90,7 +95,7 @@ def apply_core_properties(meta_file, filename, meta_ext):
 
     doc = docx.Document(filename)  # type:docx.Document
 
-    meta = AttrDict({key: get_choice(meta_ext, meta_file, key) for key in ATTR_LIST})
+    meta = DictDotNotation({key: get_choice(meta_ext, meta_file, key) for key in ATTR_LIST})
     [print("{} = {}".format(key, val), file=sys.stderr) for key, val in meta.items()]
     if meta.author is not None:
         """ author (unicode)
