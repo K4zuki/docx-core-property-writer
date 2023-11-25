@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from __future__ import print_function
 import datetime
 import sys
 import argparse
@@ -9,6 +8,9 @@ import docx
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
+from docx.table import Table, _Cell
+from docx.text.paragraph import Paragraph, Run
+from docx.enum.section import WD_SECTION
 
 from docx_coreprop_writer.version import version
 
@@ -205,6 +207,7 @@ def apply_table_alignment_in_page(meta_file, filename, meta_ext):
         doc = docx.Document(filename)  # type:docx.Document
         table_alignment_in_page = table_alignment_in_page.lower()
         print(_message.format(table_alignment_in_page), file=sys.stderr)
+        table: Table
         for table in doc.tables:
             table.alignment = TABLE_ALIGNMENT_IN_PAGE[table_alignment_in_page]
         doc.save(filename)
@@ -226,7 +229,9 @@ def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
         doc = docx.Document(filename)  # type:docx.Document
         cell_vertical_alignment = cell_vertical_alignment.lower()
         print(_message.format(cell_vertical_alignment), file=sys.stderr)
+        table: Table
         for table in doc.tables:
+            cell: _Cell
             for cell in table._cells:
                 cell.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
         doc.save(filename)
@@ -302,11 +307,12 @@ def disable_table_autofit(meta_file, filename, meta_ext):
     _message = "Fix table column widths"
     _key = "disable-table-autofit"
 
-    disable_table_autofit = get_choice(meta_ext, meta_file, _key)
+    disable_table_autofit_meta = get_choice(meta_ext, meta_file, _key)
 
-    if disable_table_autofit is True:
+    if disable_table_autofit_meta is True:
         doc = docx.Document(filename)  # type:docx.Document
         print(_message, file=sys.stderr)
+        table: Table
         for table in doc.tables:
             table.autofit = False
         doc.save(filename)
@@ -405,11 +411,39 @@ def replace_character_style(meta_file, filename, meta_ext):
         print(_message, file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
         for key, val in char.items():
+            para: Paragraph
             for para in doc.paragraphs:
+                run: Run
                 for run in para.runs:
                     if run.style.name == key:
                         print("{} -> {}".format(key, val), file=sys.stderr)
                         run.style = doc.styles[val]
+
+        doc.save(filename)
+
+
+def insert_extra_section(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Insert extra section"
+    _key = "extra_section"
+
+    char = get_choice(meta_ext, meta_file, _key)
+
+    if char is not None:
+        print(_message, file=sys.stderr)
+        doc = docx.Document(filename)  # type:docx.Document
+        extra_section = doc.add_section(WD_SECTION.NEW_PAGE)
+        extra_section.different_first_page_header_footer = False
+
+        new_header = extra_section.header
+        new_header.is_linked_to_previous = False
+        new_footer = extra_section.footer
+        new_footer.is_linked_to_previous = False
 
         doc.save(filename)
 
@@ -440,6 +474,7 @@ def main():
     apply_cell_vertical_alignment(meta_file, doc, meta_ext)
     disable_table_autofit(meta_file, doc, meta_ext)
     recommend_readonly(meta_file, doc, meta_ext)
+    insert_extra_section(meta_file, doc, meta_ext)
 
     print("{} processed".format(doc), file=sys.stderr)
 
