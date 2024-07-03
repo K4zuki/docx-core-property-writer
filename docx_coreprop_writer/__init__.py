@@ -436,7 +436,7 @@ def insert_extra_section(meta_file, filename, meta_ext):
 
     char = get_choice(meta_ext, meta_file, _key)
 
-    if char is not None:
+    if char is True:
         print(_message, file=sys.stderr)
         doc: docx.Document = docx.Document(filename)
 
