@@ -46,7 +46,7 @@ jobs:
           pip3 install --break-system-packages pandocker-lua-filters docx-coreprop-writer
           pip3 install --break-system-packages git+https://github.com/k4zuki/pandoc_misc.git@2.16.2
       - name: Build document
-        run: make docx
+        run: make install docx
       - name: Upload artifact files (at a push)
         uses: actions/upload-artifact@v2
         with:
