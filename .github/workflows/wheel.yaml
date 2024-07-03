@@ -34,7 +34,7 @@ jobs:
     if: "contains(github.event.head_commit.message, 'documentation')"
     steps:
       - name: Checkout
-        uses: actions/checkout@v2.0.0
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
       - name: Setup safe directory for git
@@ -43,8 +43,8 @@ jobs:
           git config --global --add safe.directory /__w/${repo}/${repo}
       - name: Update dependencies
         run: |
-          pip3 install pandocker-lua-filters docx-coreprop-writer
-          pip3 install git+https://github.com/k4zuki/pandoc_misc.git@2.16.2
+          pip3 install --break-system-packages pandocker-lua-filters docx-coreprop-writer
+          pip3 install --break-system-packages git+https://github.com/k4zuki/pandoc_misc.git@2.16.2
       - name: Build document
         run: make docx
       - name: Upload artifact files (at a push)
