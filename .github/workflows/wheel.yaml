@@ -36,7 +36,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build document
-        run: make initdir html docx pdf
+        run: make html docx pdf
       - name: Upload artifact files (at a push)
         uses: actions/upload-artifact@v2
         with:
