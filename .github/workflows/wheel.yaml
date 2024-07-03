@@ -26,3 +26,20 @@ jobs:
         with:
           user: ${{ secrets.PYPI_USERNAME }}
           password: ${{ secrets.PYPI_PASSWORD }}
+  documentation:
+    name: Build document pages
+    runs-on: ubuntu-latest
+    if: "contains(github.event.head_commit.message, 'documentation')"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2.0.0
+        with:
+          fetch-depth: 0
+      - name: Build document
+        run: make initdir html docx pdf
+      - name: Upload artifact files (at a push)
+        uses: actions/upload-artifact@v2
+        with:
+          name: documents
+          path: docs/Out
+
