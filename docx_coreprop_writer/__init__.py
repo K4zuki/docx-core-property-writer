@@ -431,7 +431,7 @@ def insert_extra_section(meta_file, filename, meta_ext):
     :param dict meta_ext:
     :return:
     """
-    _message = "Insert extra section"
+    _message = "Insert extra section (clears Header/Footer content)"
     _key = "extra_section"
 
     char = get_choice(meta_ext, meta_file, _key)
@@ -461,28 +461,38 @@ def insert_extra_section(meta_file, filename, meta_ext):
         extra_section.even_page_header.is_linked_to_previous = False
         extra_section.even_page_footer.is_linked_to_previous = False
 
+        doc.save(filename)
+
+
+def insert_okuzuke_table(meta_file, filename, meta_ext):
+    """
+    :param dict meta_file:
+    :param str filename:
+    :param dict meta_ext:
+    :return:
+    """
+    _message = "Insert Okuzuke table"
+    _key = "okuzuke"
+
+    okuzuke: List[str] or None = get_choice(meta_ext, meta_file, _key)
+
+    if okuzuke is not None:
+        print(_message, file=sys.stderr)
+        doc: docx.Document = docx.Document(filename)
+        last_section: Section = doc.sections[-1]
+
         vAlign = OxmlElement("w:vAlign")
         vAlign.set(qn("w:val"), "bottom")
 
-        extra_section._sectPr.append(vAlign)
-        print(extra_section._sectPr.xml, file=sys.stderr)
+        last_section._sectPr.append(vAlign)
 
         doc.add_page_break()
 
-        table: Table = doc.add_table(rows=3, cols=1)
-        table.style = doc.styles["Normal Table"]
-
-        qty_cells: List[_Cell] = table.rows[0].cells
-        qty_cells[0].text = "Qty"
-        qty_cells[0].paragraphs[0].style = "Table Body Center"
-
-        id_cells: List[_Cell] = table.rows[1].cells
-        id_cells[0].text = "Id"
-        id_cells[0].paragraphs[0].style = "Table Body Center"
-
-        desc_cells: List[_Cell] = table.rows[2].cells
-        desc_cells[0].text = "Desc"
-        desc_cells[0].paragraphs[0].style = "Table Body Center"
+        table: Table = doc.add_table(rows=0, cols=1, style="Normal Table")
+        for t in okuzuke:
+            r = table.add_row()
+            r.cells[0].text = t.strip()
+            r.cells[0].paragraphs[0].style = "Table Body Center"
 
         doc.add_page_break()
         doc.add_page_break()
@@ -517,6 +527,7 @@ def main():
     apply_cell_vertical_alignment(meta_file, doc, meta_ext)
     disable_table_autofit(meta_file, doc, meta_ext)
     recommend_readonly(meta_file, doc, meta_ext)
+    insert_okuzuke_table(meta_file, doc, meta_ext)
 
     print("{} processed".format(doc), file=sys.stderr)
 
