@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+from typing import List
+
 import datetime
 import sys
 import argparse
 import yaml
 import docx
+from docx.section import Section
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
 from docx.oxml import OxmlElement
 from docx.oxml.ns import qn
 from docx.table import Table, _Cell
 from docx.text.paragraph import Paragraph, Run
 from docx.enum.section import WD_SECTION
-
 from docx_coreprop_writer.version import version
 
 META_KEY = "docx_coreprop"
@@ -436,14 +438,54 @@ def insert_extra_section(meta_file, filename, meta_ext):
 
     if char is not None:
         print(_message, file=sys.stderr)
-        doc = docx.Document(filename)  # type:docx.Document
-        extra_section = doc.add_section(WD_SECTION.NEW_PAGE)
-        extra_section.different_first_page_header_footer = False
+        doc: docx.Document = docx.Document(filename)
 
-        new_header = extra_section.header
-        new_header.is_linked_to_previous = False
-        new_footer = extra_section.footer
-        new_footer.is_linked_to_previous = False
+        last_section: Section = doc.sections[-1]
+        extra_section: Section = doc.add_section(WD_SECTION.NEW_PAGE)
+
+        extra_section.orientation = last_section.orientation
+
+        extra_section.page_width = last_section.page_width
+        extra_section.page_height = last_section.page_height
+
+        extra_section.left_margin = last_section.left_margin
+        extra_section.right_margin = last_section.right_margin
+        extra_section.top_margin = last_section.top_margin
+        extra_section.bottom_margin = last_section.bottom_margin
+
+        extra_section.different_first_page_header_footer = True
+        extra_section.first_page_header.is_linked_to_previous = False
+        extra_section.first_page_footer.is_linked_to_previous = False
+        extra_section.header.is_linked_to_previous = False
+        extra_section.footer.is_linked_to_previous = False
+        extra_section.even_page_header.is_linked_to_previous = False
+        extra_section.even_page_footer.is_linked_to_previous = False
+
+        vAlign = OxmlElement("w:vAlign")
+        vAlign.set(qn("w:val"), "bottom")
+
+        extra_section._sectPr.append(vAlign)
+        print(extra_section._sectPr.xml, file=sys.stderr)
+
+        doc.add_page_break()
+
+        table: Table = doc.add_table(rows=3, cols=1)
+        table.style = doc.styles["Normal Table"]
+
+        qty_cells: List[_Cell] = table.rows[0].cells
+        qty_cells[0].text = "Qty"
+        qty_cells[0].paragraphs[0].style = "Table Body Center"
+
+        id_cells: List[_Cell] = table.rows[1].cells
+        id_cells[0].text = "Id"
+        id_cells[0].paragraphs[0].style = "Table Body Center"
+
+        desc_cells: List[_Cell] = table.rows[2].cells
+        desc_cells[0].text = "Desc"
+        desc_cells[0].paragraphs[0].style = "Table Body Center"
+
+        doc.add_page_break()
+        doc.add_page_break()
 
         doc.save(filename)
 
@@ -468,13 +510,13 @@ def main():
     unset_word2010_compatibility_mode(meta_file, doc, meta_ext)
     apply_core_properties(meta_file, doc, meta_ext)
     replace_paragraph_style(meta_file, doc, meta_ext)
+    insert_extra_section(meta_file, doc, meta_ext)
     replace_table_style(meta_file, doc, meta_ext)
     replace_character_style(meta_file, doc, meta_ext)
     apply_table_alignment_in_page(meta_file, doc, meta_ext)
     apply_cell_vertical_alignment(meta_file, doc, meta_ext)
     disable_table_autofit(meta_file, doc, meta_ext)
     recommend_readonly(meta_file, doc, meta_ext)
-    insert_extra_section(meta_file, doc, meta_ext)
 
     print("{} processed".format(doc), file=sys.stderr)
 
