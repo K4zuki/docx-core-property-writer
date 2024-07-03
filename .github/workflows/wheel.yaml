@@ -29,6 +29,8 @@ jobs:
   documentation:
     name: Build document pages
     runs-on: ubuntu-latest
+    container:
+      image: k4zuki/pandocker-alpine:3.2-core
     if: "contains(github.event.head_commit.message, 'documentation')"
     steps:
       - name: Checkout
@@ -36,7 +38,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Build document
-        run: make html docx pdf
+        run: make docx
       - name: Upload artifact files (at a push)
         uses: actions/upload-artifact@v2
         with:
