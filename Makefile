@@ -1,6 +1,6 @@
 html:
 	cd docs; \
-	make html
+	make initdir html
 
 install:
 	pip3 install --break-system-packages .
@@ -12,23 +12,23 @@ reinstall: uninstall install
 
 clean:
 	cd docs; \
-	make clean
+	make initdir clean
 
 tex:
 	cd docs; \
-	make tex
+	make initdir tex
 
 docx:
 	cd docs; \
-	make docx
+	make initdir docx
 
 reverse-docx:
 	cd docs; \
-	make reverse-docx
+	make initdir reverse-docx
 
 pdf:
 	cd docs; \
-	make pdf
+	make initdir pdf
 
 wheel:
 	sudo python3 setup.py bdist_wheel
