@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-
-from typing import List
+from typing import List, Dict
 
 import datetime
 import sys
@@ -64,13 +63,15 @@ class StoreDict(argparse.Action):
         setattr(namespace, self.dest, vals)
 
 
-def get_choice(meta_ext, meta_file, key):
+def get_choice(meta_ext: Dict or None, meta_file: Dict, key):
     """ tries to get meta_ext[key], then try meta_file[key]
 
-    :param dict meta_ext:
-    :param dict meta_file:
+    :param Dict or None meta_ext:
+    :param Dict meta_file:
     :param str key:
-    :return ret:
+    :return Dict ret:
+
+    Uses metadata from external when exist (meta_ext), otherwise from default (meta_file)
     """
     assert meta_file is not None
     if meta_ext is not None:
