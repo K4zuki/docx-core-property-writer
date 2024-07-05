@@ -87,11 +87,14 @@ docx_coreprop:
   character:
     "Verbatim Char": "NormalTok"
   okuzuke:
-    - "Title"
-    - "circle"
-    - "Author"
-    - |
-      Markdown x Pandoc (DOCX writer)
-      with docx-coreprop-writer program
-    - "Revision 1.0 / Comiket / 2024"
+    table-style: "Centered"
+    para-style: "Table Body Center"
+    rows:
+      - "Title"
+      - "circle"
+      - "Author"
+      - |
+        Markdown x Pandoc (DOCX writer)
+        with docx-coreprop-writer program
+      - "Revision 1.0 / Comiket / 2024"
 ...
