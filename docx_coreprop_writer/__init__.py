@@ -472,9 +472,7 @@ def insert_okuzuke_table(meta_file, filename):
         doc: docx.Document = docx.Document(filename)
         last_section: Section = doc.sections[-1]
 
-        vAlign = OxmlElement("w:vAlign")
-        vAlign.set(qn("w:val"), "bottom")
-
+        vAlign = OxmlElement("w:vAlign", attrs={qn("w:val"): "bottom"})
         last_section._sectPr.append(vAlign)
 
         doc.add_page_break()
