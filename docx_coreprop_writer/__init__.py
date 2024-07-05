@@ -492,8 +492,8 @@ def insert_okuzuke_table(meta_file, filename, meta_ext):
 
         doc.add_page_break()
 
-        table: Table = doc.add_table(rows=0, cols=1, style="Normal Table")
-        for t in okuzuke:
+        table: Table = doc.add_table(rows=0, cols=1, style=okuzuke.get("table-style", "Normal Table"))
+        for t in okuzuke.get("rows", []):
             r = table.add_row()
             r.cells[0].text = t.strip()
             r.cells[0].paragraphs[0].style = "Table Body Center"
