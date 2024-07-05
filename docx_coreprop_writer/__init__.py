@@ -329,21 +329,24 @@ def recommend_readonly(meta_file, filename, meta_ext):
     """
     _message = "Set read only recommend flag"
     _key = "read-only-recommended"
+    elem_name = "w:writeProtection"
+    attr_name = "w:recommended"
 
     read_only = get_choice(meta_ext, meta_file, _key)
 
     if read_only is True:
         print(_message, file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
-        write_protection = doc.settings.element.xpath("w:writeProtection")
+        write_protection = doc.settings.element.xpath(elem_name)
         if write_protection == []:
-            write_protection = OxmlElement("w:writeProtection")
-            write_protection.set(qn("w:recommended"), "1")
+            # write_protection = OxmlElement(elem_name, attrs={sub_name: "1"})
+            write_protection = OxmlElement(elem_name)
+            write_protection.set(qn(attr_name), "1")
             doc.settings.element.append(write_protection)
         else:
             write_protection = write_protection[0]
-            if write_protection.get(qn("w:recommended"), None) is None:
-                write_protection.set(qn("w:recommended"), "1")
+            if write_protection.get(qn(attr_name), None) is None:
+                write_protection.set(qn(attr_name), "1")
 
         doc.save(filename)
 
