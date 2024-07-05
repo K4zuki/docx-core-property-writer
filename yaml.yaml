@@ -21,10 +21,19 @@ docx_coreprop:
   table-cell-vertical-alignment: center # top / center / bottom / both
   read-only-recommended: true
   disable-table-autofit: false # setting 'true' requires explicit column widths setting
+  extra_section: true
 
   table:
     "Normal Table": "Centered"
   paragraph:
     "Normal": "Body Text"
     "First Paragraph": "Body Text"
+
+  okuzuke:
+    table-style: "Normal Table"
+    rows:
+      - "Title"
+      - "Author"
+      - "Revision"
+      - "Year"
 ...
