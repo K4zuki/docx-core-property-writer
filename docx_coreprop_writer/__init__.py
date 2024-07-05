@@ -5,6 +5,7 @@ import datetime
 import sys
 import argparse
 import yaml
+from box import Box
 import docx
 from docx.section import Section
 from docx.enum.table import WD_CELL_VERTICAL_ALIGNMENT, WD_TABLE_ALIGNMENT
@@ -89,18 +90,17 @@ class DictDotNotation(dict):
         self.__dict__ = self
 
 
-def apply_core_properties(meta_file, filename, meta_ext):
+def apply_core_properties(meta_file, filename):
     """ Overwrite DOCX core property from meta_file or meta_ext dictionaries
     When both dict has value for each for same key, meta_ext has priority
 
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     """
 
     doc = docx.Document(filename)  # type:docx.Document
 
-    meta = DictDotNotation({key: get_choice(meta_ext, meta_file, key) for key in ATTR_LIST})
+    meta = Box({key: meta_file.get(key) for key in ATTR_LIST})
     [print("{} = {}".format(key, val), file=sys.stderr) for key, val in meta.items()]
     if meta.author is not None:
         """ author (unicode)
@@ -194,17 +194,16 @@ def apply_core_properties(meta_file, filename, meta_ext):
     doc.save(filename)
 
 
-def apply_table_alignment_in_page(meta_file, filename, meta_ext):
+def apply_table_alignment_in_page(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Each table has aligned at {} of page"
     _key = "table-alignment-in-page"
 
-    table_alignment_in_page = get_choice(meta_ext, meta_file, _key)
+    table_alignment_in_page = meta_file.get(_key)
 
     if table_alignment_in_page is not None:
         doc = docx.Document(filename)  # type:docx.Document
@@ -216,17 +215,16 @@ def apply_table_alignment_in_page(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
+def apply_cell_vertical_alignment(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Each table cell has vertically {} aligned"
     _key = "table-cell-vertical-alignment"
 
-    cell_vertical_alignment = get_choice(meta_ext, meta_file, _key)
+    cell_vertical_alignment = meta_file.get(_key)
 
     if cell_vertical_alignment is not None:
         doc = docx.Document(filename)  # type:docx.Document
@@ -240,11 +238,10 @@ def apply_cell_vertical_alignment(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def unset_word2010_compatibility_mode(meta_file, filename, meta_ext):
+def unset_word2010_compatibility_mode(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Drop Word 2010 compatibility mode"
@@ -283,7 +280,7 @@ def unset_word2010_compatibility_mode(meta_file, filename, meta_ext):
          ),
     ]
 
-    word2010compatible = get_choice(meta_ext, meta_file, _key)
+    word2010compatible = meta_file.get(_key, False)
 
     if word2010compatible is False:
         print(_message, file=sys.stderr)
@@ -300,17 +297,16 @@ def unset_word2010_compatibility_mode(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def disable_table_autofit(meta_file, filename, meta_ext):
+def disable_table_autofit(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Fix table column widths"
     _key = "disable-table-autofit"
 
-    disable_table_autofit_meta = get_choice(meta_ext, meta_file, _key)
+    disable_table_autofit_meta = meta_file.get(_key, False)
 
     if disable_table_autofit_meta is True:
         doc = docx.Document(filename)  # type:docx.Document
@@ -321,11 +317,10 @@ def disable_table_autofit(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def recommend_readonly(meta_file, filename, meta_ext):
+def recommend_readonly(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Set read only recommend flag"
@@ -333,7 +328,7 @@ def recommend_readonly(meta_file, filename, meta_ext):
     elem_name = "w:writeProtection"
     attr_name = "w:recommended"
 
-    read_only = get_choice(meta_ext, meta_file, _key)
+    read_only = meta_file.get(_key, False)
 
     if read_only is True:
         print(_message, file=sys.stderr)
@@ -352,17 +347,16 @@ def recommend_readonly(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def replace_table_style(meta_file, filename, meta_ext):
+def replace_table_style(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Replace table styles"
     _key = "table"
 
-    table = get_choice(meta_ext, meta_file, _key)
+    table = meta_file.get(_key)
 
     if table is not None:
         print(_message, file=sys.stderr)
@@ -376,17 +370,16 @@ def replace_table_style(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def replace_paragraph_style(meta_file, filename, meta_ext):
+def replace_paragraph_style(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Replace paragraph styles"
     _key = "paragraph"
 
-    para = get_choice(meta_ext, meta_file, _key)
+    para = meta_file.get(_key)
 
     if para is not None:
         print(_message, file=sys.stderr)
@@ -401,17 +394,16 @@ def replace_paragraph_style(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def replace_character_style(meta_file, filename, meta_ext):
+def replace_character_style(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Replace character styles"
     _key = "character"
 
-    char = get_choice(meta_ext, meta_file, _key)
+    char = meta_file.get(_key)
 
     if char is not None:
         print(_message, file=sys.stderr)
@@ -428,17 +420,16 @@ def replace_character_style(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def insert_extra_section(meta_file, filename, meta_ext):
+def insert_extra_section(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Insert extra section (clears Header/Footer content)"
     _key = "extra_section"
 
-    char = get_choice(meta_ext, meta_file, _key)
+    char = meta_file.get(_key, False)
 
     if char is True:
         print(_message, file=sys.stderr)
@@ -468,17 +459,16 @@ def insert_extra_section(meta_file, filename, meta_ext):
         doc.save(filename)
 
 
-def insert_okuzuke_table(meta_file, filename, meta_ext):
+def insert_okuzuke_table(meta_file, filename):
     """
     :param dict meta_file:
     :param str filename:
-    :param dict meta_ext:
     :return:
     """
     _message = "Insert Okuzuke table"
     _key = "okuzuke"
 
-    okuzuke: List[str] or None = get_choice(meta_ext, meta_file, _key)
+    okuzuke = meta_file.get(_key)
 
     if okuzuke is not None:
         print(_message, file=sys.stderr)
@@ -515,23 +505,23 @@ def main():
 
     args = parser.parse_args()
 
-    with open(args.input, "r") as file:
-        meta_file = yaml.load(file.read(), Loader=yaml.SafeLoader).get(META_KEY, {})
+    meta_file = Box.from_yaml(filename=args.input).get(META_KEY, Box({}))
     doc = args.output
-    meta_ext = args.metadata
+    meta_ext = Box(args.metadata)
     # style_ext = {"paragraph": args.paragraph, "table": args.table, }
+    metadata = meta_file + meta_ext
 
-    unset_word2010_compatibility_mode(meta_file, doc, meta_ext)
-    apply_core_properties(meta_file, doc, meta_ext)
-    replace_paragraph_style(meta_file, doc, meta_ext)
-    insert_extra_section(meta_file, doc, meta_ext)
-    replace_table_style(meta_file, doc, meta_ext)
-    replace_character_style(meta_file, doc, meta_ext)
-    apply_table_alignment_in_page(meta_file, doc, meta_ext)
-    apply_cell_vertical_alignment(meta_file, doc, meta_ext)
-    disable_table_autofit(meta_file, doc, meta_ext)
-    recommend_readonly(meta_file, doc, meta_ext)
-    insert_okuzuke_table(meta_file, doc, meta_ext)
+    unset_word2010_compatibility_mode(metadata, doc)
+    apply_core_properties(metadata, doc)
+    replace_paragraph_style(metadata, doc)
+    insert_extra_section(metadata, doc)
+    replace_table_style(metadata, doc)
+    replace_character_style(metadata, doc)
+    apply_table_alignment_in_page(metadata, doc)
+    apply_cell_vertical_alignment(metadata, doc)
+    disable_table_autofit(metadata, doc)
+    recommend_readonly(metadata, doc)
+    insert_okuzuke_table(metadata, doc)
 
     print("{} processed".format(doc), file=sys.stderr)
 
