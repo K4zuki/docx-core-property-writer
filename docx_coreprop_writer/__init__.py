@@ -232,9 +232,9 @@ def apply_cell_vertical_alignment(meta_file, filename):
         print(_message.format(cell_vertical_alignment), file=sys.stderr)
         table: Table
         for table in doc.tables:
-            cell: _Cell
-            for cell in table._cells:
-                cell.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
+            for row in table.rows:
+                for cell in row.cells:
+                    cell.vertical_alignment = CELL_VERTICAL_ALIGMENT[cell_vertical_alignment]
         doc.save(filename)
 
 
@@ -246,36 +246,37 @@ def unset_word2010_compatibility_mode(meta_file, filename):
     """
     _message = "Drop Word 2010 compatibility mode"
     _key = "word2010compatible"
+    w_compat = "w:compat"
     subelements = [
         ("w:useFELayout", {}),
-        ("w:compatSetting", {"w:name": "compatibilityMode",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "15"
+        ("w:compatSetting", {qn("w:name"): "compatibilityMode",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "15"
                              },
          ),
-        ("w:compatSetting", {"w:name": "overrideTableStyleFontSizeAndJustification",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "1",
+        ("w:compatSetting", {qn("w:name"): "overrideTableStyleFontSizeAndJustification",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "1",
                              },
          ),
-        ("w:compatSetting", {"w:name": "enableOpenTypeFeatures",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "1"
+        ("w:compatSetting", {qn("w:name"): "enableOpenTypeFeatures",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "1"
                              },
          ),
-        ("w:compatSetting", {"w:name": "doNotFlipMirrorIndents",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "1",
+        ("w:compatSetting", {qn("w:name"): "doNotFlipMirrorIndents",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "1",
                              },
          ),
-        ("w:compatSetting", {"w:name": "differentiateMultirowTableHeaders",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "1",
+        ("w:compatSetting", {qn("w:name"): "differentiateMultirowTableHeaders",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "1",
                              },
          ),
-        ("w:compatSetting", {"w:name": "useWord2013TrackBottomHyphenation",
-                             "w:url": "http://schemas.microsoft.com/office/word",
-                             "w:val": "0",
+        ("w:compatSetting", {qn("w:name"): "useWord2013TrackBottomHyphenation",
+                             qn("w:url"): "http://schemas.microsoft.com/office/word",
+                             qn("w:val"): "0",
                              },
          ),
     ]
@@ -285,13 +286,11 @@ def unset_word2010_compatibility_mode(meta_file, filename):
     if word2010compatible is False:
         print(_message, file=sys.stderr)
         doc = docx.Document(filename)  # type:docx.Document
-        doc.settings.element.remove_all("w:compat")
+        doc.settings.element.remove_all(w_compat)
 
-        compat = OxmlElement("w:compat")
+        compat = OxmlElement(w_compat)
         for sub_elem in subelements:
-            subelement = OxmlElement(sub_elem[0])
-            for attr, val in sub_elem[1].items():
-                subelement.set(qn(attr), val)
+            subelement = OxmlElement(sub_elem[0], attrs=sub_elem[1])
             compat.append(subelement)
         doc.settings.element.append(compat)
         doc.save(filename)
@@ -326,7 +325,7 @@ def recommend_readonly(meta_file, filename):
     _message = "Set read only recommend flag"
     _key = "read-only-recommended"
     elem_name = "w:writeProtection"
-    attr_name = "w:recommended"
+    attr_name = qn("w:recommended")
 
     read_only = meta_file.get(_key, False)
 
@@ -335,14 +334,12 @@ def recommend_readonly(meta_file, filename):
         doc = docx.Document(filename)  # type:docx.Document
         write_protection = doc.settings.element.xpath(elem_name)
         if write_protection == []:
-            # write_protection = OxmlElement(elem_name, attrs={sub_name: "1"})
-            write_protection = OxmlElement(elem_name)
-            write_protection.set(qn(attr_name), "1")
+            write_protection = OxmlElement(elem_name, attrs={attr_name: "1"})
             doc.settings.element.append(write_protection)
         else:
             write_protection = write_protection[0]
-            if write_protection.get(qn(attr_name), None) is None:
-                write_protection.set(qn(attr_name), "1")
+            if write_protection.get(attr_name, None) is None:
+                write_protection.set(attr_name, "1")
 
         doc.save(filename)
 
@@ -483,10 +480,10 @@ def insert_okuzuke_table(meta_file, filename):
         doc.add_page_break()
 
         table: Table = doc.add_table(rows=0, cols=1, style=okuzuke.get("table-style", "Normal Table"))
-        for t in okuzuke.get("rows", []):
-            r = table.add_row()
-            r.cells[0].text = t.strip()
-            r.cells[0].paragraphs[0].style = "Table Body Center"
+        for row_text in okuzuke.get("rows", []):
+            row = table.add_row()
+            row.cells[0].text = row_text.strip()
+            row.cells[0].paragraphs[0].style = okuzuke.get("para-style", "Table Body Left")
 
         doc.add_page_break()
         doc.add_page_break()
