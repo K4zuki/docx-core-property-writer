@@ -478,6 +478,7 @@ def insert_okuzuke_table(meta_file, filename):
         doc.add_page_break()
 
         table: Table = doc.add_table(rows=0, cols=1, style=okuzuke.get("table-style", "Normal Table"))
+        table.alignment = TABLE_ALIGNMENT_IN_PAGE["center"]
         for row_text in okuzuke.get("rows", []):
             row = table.add_row()
             row.cells[0].text = row_text.strip()
